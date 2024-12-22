@@ -1,8 +1,8 @@
 import {promises as fs} from "fs";
-import {Message} from "./types";
-const Caesar = require("caesar-salad").Caesar;
+import {Message, MessageWithoutDecrypt} from "./types";
+const Caesar = require('caesar-salad').Caesar;
 
-let messages: Message[] = []
+let messages: MessageWithoutDecrypt[] = []
 const msgFile = './message.json';
 
  const db = {
@@ -11,15 +11,23 @@ const msgFile = './message.json';
         messages = JSON.parse(rm.toString());
     },
     async encryptMessage(msg: Message) {
-        void this.init()
-        messages.push(msg);
-        void this.save()
+        const enc = Caesar.Cipher('c').crypt(msg.message);
+        const fil = messages.find((m) => m.password === msg.password);
+        if (!fil) {
+            messages.push({
+                password: msg.password,
+                message: enc
+            });
+        } else {
+            return 'This password already registered!';
+        }
+        await this.save();
     },
-     async decryptMessage(msg: Message) {
-
-     },
      async save() {
         void fs.writeFile(msgFile, JSON.stringify(messages))
+     },
+     getAll() {
+        return messages;
      }
 }
 
